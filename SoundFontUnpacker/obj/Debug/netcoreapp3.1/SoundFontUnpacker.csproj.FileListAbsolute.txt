@@ -1,0 +1,11 @@
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\bin\Debug\netcoreapp3.1\SoundFontUnpacker.exe
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\bin\Debug\netcoreapp3.1\SoundFontUnpacker.deps.json
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\bin\Debug\netcoreapp3.1\SoundFontUnpacker.runtimeconfig.json
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\bin\Debug\netcoreapp3.1\SoundFontUnpacker.runtimeconfig.dev.json
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\bin\Debug\netcoreapp3.1\SoundFontUnpacker.dll
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\bin\Debug\netcoreapp3.1\SoundFontUnpacker.pdb
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\obj\Debug\netcoreapp3.1\SoundFontUnpacker.csprojAssemblyReference.cache
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\obj\Debug\netcoreapp3.1\SoundFontUnpacker.AssemblyInfoInputs.cache
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\obj\Debug\netcoreapp3.1\SoundFontUnpacker.AssemblyInfo.cs
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\obj\Debug\netcoreapp3.1\SoundFontUnpacker.dll
+C:\Users\Catonator\source\repos\SoundFontUnpacker\SoundFontUnpacker\obj\Debug\netcoreapp3.1\SoundFontUnpacker.pdb

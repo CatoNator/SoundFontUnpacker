@@ -66,7 +66,7 @@ namespace SoundFontUnpacker
 
             //code here
             if (reader.ReadUInt32() != 0x46464952) //'RIFF'
-                Console.WriteLine("Header mismatch!");
+                throw new Exception("Header mismatch!");
 
             //size of the SFBK block
             uint SFBKSize = reader.ReadUInt32();
@@ -77,29 +77,29 @@ namespace SoundFontUnpacker
                 Console.WriteLine("Expected sfbk block");*/
 
             if (reader.ReadUInt32() != 0x5453494C) //'LIST'
-                Console.WriteLine("Expected LIST block");
-            
+                throw new Exception("Expected LIST block!");
+
             //offset of LIST block from this point on
             uint LISTOffset = reader.ReadUInt32();
             LISTOffset += (uint)reader.BaseStream.Position; //LIST block is counter from the position at the end of the offset value
 
-            Console.WriteLine("LISTOffset: " + LISTOffset);
+            //Console.WriteLine("LISTOffset: " + LISTOffset);
 
             //seek to sample data start
             reader.BaseStream.Seek((long)LISTOffset, SeekOrigin.Begin);
 
             if (reader.ReadUInt32() != 0x5453494C) //'LIST'
-                Console.WriteLine("Expected LIST block");
+                throw new Exception("Expected LIST block!");
 
             //sample List size, for future reference
             uint LISTSize = reader.ReadUInt32();
             LISTOffset = (uint)reader.BaseStream.Position + LISTSize;
 
             if (reader.ReadUInt32() != 0x61746473) //'sdta'
-                Console.WriteLine("Expected sdta block");
+                throw new Exception("Expected sdta block!");
 
             if (reader.ReadUInt32() != 0x6C706D73) //'smpl'
-                Console.WriteLine("Expected smpl data");
+                throw new Exception("Expected smpl block!");
 
             //read sample data size
             uint SampleDataSize = reader.ReadUInt32();
@@ -107,7 +107,7 @@ namespace SoundFontUnpacker
             SampleData = reader.ReadBytes((int)SampleDataSize);
 
             if (reader.ReadUInt32() != 0x5453494C) //'LIST'
-                Console.WriteLine("Expected LIST block");
+                throw new Exception("Expected LIST block!");
 
             //read size
             LISTSize = reader.ReadUInt32();
@@ -115,7 +115,7 @@ namespace SoundFontUnpacker
 
             //pdta block
             if (reader.ReadUInt32() != 0x61746473) //'pdta'
-                Console.WriteLine("Expected pdta block");
+                throw new Exception("Expected pdta block!");
 
             //phdr block instrument info
             SkipSubchunk(reader);
@@ -146,7 +146,7 @@ namespace SoundFontUnpacker
 
             //temp
             if (reader.ReadUInt32() != 0x72646873) //'shdr'
-                Console.WriteLine("Expected shdr block");
+                throw new Exception("Expected shdr block!");
 
             uint SHDRSize = reader.ReadUInt32();
             int SHDREntryCount = ((int)SHDRSize / 46) - 1; //always has at least 2 entries, one of them is padding
@@ -168,7 +168,7 @@ namespace SoundFontUnpacker
         static void SkipList(BinaryReader reader)
         {
             if (reader.ReadUInt32() != 0x5453494C) //'LIST'
-                Console.WriteLine("Expected LIST block");
+                throw new Exception("Expected LIST block!");
 
             uint LISTOffset = reader.ReadUInt32();
             LISTOffset += (uint)reader.BaseStream.Position; //LIST block is counter from the position at the end of the offset value

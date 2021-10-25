@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace SoundFontUnpacker
 {
@@ -42,17 +43,15 @@ namespace SoundFontUnpacker
 
             UnpackSF2(input, output);
 #else
+            Console.WriteLine("SoundFontUnpacker - extract *.sf2 files into *.wav files in a directory\nUsage: SoundFontUnpacker.exe sourcefile destfolder\nWritten by Catonator in Oct 2021");
+
             if (args.Length >= 2)
             {
-                //Console.WriteLine("BPAExtract - Extract Death Rally archives (*.BPA) into folders.\nInput the file.");
-                string input = args[0]; //Console.ReadLine();
-                //Console.WriteLine("Input the output file.");
-                string output = args[1]; // Console.ReadLine();
+                string input = args[0];
+                string output = args[1];
 
                 UnpackSF2(input, output);
             }
-            else
-                Console.WriteLine("SoundFontUnpacker - extract *.sf2 files into *.wav files in a directory\nUsage: SoundFontUnpacker.exe sourcefile destfolder");
 #endif
         }
 
@@ -223,7 +222,8 @@ namespace SoundFontUnpacker
             uint LoopStart = reader.ReadUInt32();
             uint LoopEnd = reader.ReadUInt32();
 
-            NewSound.SampleLoopStart = LoopStart;
+            //loop start is counted from the start of the sample field
+            NewSound.SampleLoopStart = LoopStart - SampleStart;
             NewSound.SampleLoopLength = (LoopEnd - LoopStart);
 
             Console.WriteLine("loop start " + NewSound.SampleLoopStart + " loop length " + NewSound.SampleLoopLength);
@@ -259,27 +259,34 @@ namespace SoundFontUnpacker
                 case 8:
                 case 32776:
                     Console.WriteLine("Ignored linked sample");
-                    break;
-                case 0:
+                    return;
+                case 1:
+                    //Console.WriteLine("Mono sample");
                     side = 0;
                     break;
-                /*case 1:
+                case 2:
+                    //Console.WriteLine("Left sample");
                     side = 1;
                     LinkedSound = Sounds[Sound.SampleLink];
                     break;
-                case 2:
+                case 3:
+                    //Console.WriteLine("Right sample");
                     side = 2;
                     LinkedSound = Sounds[Sound.SampleLink];
-                    break;*/
+                    break;
                 case 32769:
                 case 32770:
                 case 32772:
                     Console.WriteLine("ROM samples unsupported");
-                    break;
+                    return;
             }
 
+            //ensuring that filename is legal in windows
+            Regex IllegalRegex = new Regex("(^(PRN|AUX|NUL|CON|COM[1-9]|LPT[1-9]|(\\.+)$)(\\..*)?$)|(([\\x00-\\x1f\\\\?*:\";‌​|/<>])+)|([\\. ]+)", RegexOptions.IgnoreCase);
 
-            FileStream outstream = File.Create(DestFolder + "\\" + Sound.SoundName + ".wav");
+            string FileName = IllegalRegex.Replace(Sound.SoundName, "");
+
+            FileStream outstream = File.Create(DestFolder + "\\" + FileName + ".wav");
             BinaryWriter writer = new BinaryWriter(outstream);
 
             //RIFF
@@ -291,8 +298,8 @@ namespace SoundFontUnpacker
             //get channel count, calculate the chunk size
             ushort Channels = 1;
 
-            /*if (side != 0)
-                Channels = 2;*/
+            if (side != 0)
+                Channels = 2;
 
             //chunksize
             //temp
@@ -336,6 +343,65 @@ namespace SoundFontUnpacker
             //bitdepth
             writer.Write((ushort)16);
 
+            //smpl subchunk for loops
+            writer.Write((byte)'s');
+            writer.Write((byte)'m');
+            writer.Write((byte)'p');
+            writer.Write((byte)'l');
+
+            //subchunk size
+            writer.Write((uint)60); //temp?
+
+            //manufacturer (N/A)
+            writer.Write((uint)0);
+
+            //product (N/A)
+            writer.Write((uint)0);
+
+            //sampling period in nanoseconds
+            uint SamplingPeriod = (1 / Sound.SampleRate) * 1000000000;
+            writer.Write(SamplingPeriod);
+
+            //default note (60 is C-5 - tbd?)
+            writer.Write((uint)60);
+
+            //MIDI note fraction -  defaulted to zero
+            writer.Write((uint)0);
+
+            //SMPTE format
+            writer.Write((uint)0);
+
+            //SMPTE offset, this is defaulted to zero (who wants to delay their sample playback by 23 hours?)
+            writer.Write((uint)0);
+
+            //loop count - always 1
+            writer.Write((uint)1);
+
+            //sample data - nothin special here
+            writer.Write((uint)0);
+
+            //loop time
+            //4-byte id
+            writer.Write((byte)'l');
+            writer.Write((byte)'o');
+            writer.Write((byte)'o');
+            writer.Write((byte)'p');
+
+            //loop type, default is zero
+            writer.Write((uint)0);
+
+            //loop start
+            writer.Write(Sound.SampleLoopStart);
+
+            //loop end
+            writer.Write(Sound.SampleLoopStart + Sound.SampleLoopLength);
+
+            //fraction (N/A)
+            writer.Write((uint)0);
+
+            //loop count - 0 is infinite
+            writer.Write((uint)0);
+
             //data chunk
             writer.Write((byte)'d');
             writer.Write((byte)'a');
@@ -360,13 +426,22 @@ namespace SoundFontUnpacker
                     AudioData[ind] = SampleData[SampleStart + ind];
                     AudioData[ind + 1] = SampleData[SampleStart + ind + 1];
                 }
-                else //stereo samples
+                //stereo samples
+                else if (side == 1) //left sample, with right linked
                 {
                     AudioData[ind] = SampleData[SampleStart + ind];
                     AudioData[ind + 1] = SampleData[SampleStart + ind + 1];
 
                     AudioData[ind + 2] = SampleData[LinkStart + ind];
                     AudioData[ind + 3] = SampleData[LinkStart + ind + 1];
+                }
+                else //right sample, with left linked
+                {
+                    AudioData[ind] = SampleData[LinkStart + ind];
+                    AudioData[ind + 1] = SampleData[LinkStart + ind + 1];
+
+                    AudioData[ind + 2] = SampleData[SampleStart + ind];
+                    AudioData[ind + 3] = SampleData[SampleStart + ind + 1];
                 }
             }
 
